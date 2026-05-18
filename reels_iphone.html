@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MLB App Reels Mockup</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Prevent iOS tap highlight color */
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        body {
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100dvh; /* dvh fixes the iOS Safari bottom address bar bug */
+            overflow: hidden;
+        }
+
+        /* Mobile Phone Container (Desktop view) */
+        .app-container {
+            width: 390px;
+            height: 844px;
+            background-color: #121212;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 30px;
+            border: 8px solid #333;
+            transition: all 0.3s ease;
+        }
+
+        /* When opened on an actual mobile device, take over the whole screen */
+        @media (max-width: 600px) {
+            .app-container {
+                width: 100vw;
+                height: 100dvh;
+                border-radius: 0;
+                border: none;
+            }
+        }
+
+        /* Mockup Top Header / Matchup Info */
+        .header {
+            /* Add safe area inset so the notch/dynamic island doesn't block the score */
+            padding: env(safe-area-inset-top, 15px) 15px 15px 15px;
+            background-color: #1a1b1f;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .matchup {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .team-logo {
+            width: 40px;
+            height: 40px;
+            background-color: #333;
+            border-radius: 50%;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .game-time {
+            text-align: center;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            background-color: #121212;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a90e2;
+        }
+
+        /* Reels Player Section */
+        .reels-header {
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .reels-container {
+            flex: 1;
+            overflow-y: scroll;
+            /* iOS momentum scrolling */
+            -webkit-overflow-scrolling: touch; 
+            scroll-snap-type: y mandatory;
+            background-color: #000;
+            /* Hide scrollbar */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            position: relative;
+            transition: all 0.3s ease;
+            /* Ensure bottom of reels area clears the iPhone home indicator */
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        /* IN-APP FULLSCREEN CLASS */
+        .reels-container.in-app-fullscreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            padding-bottom: 0; 
+        }
+
+        .reels-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .reel-wrapper {
+            height: 100%; 
+            width: 100%;
+            scroll-snap-align: start;
+            position: relative;
+            cursor: pointer;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .overlay {
+            position: absolute;
+            /* Push text up slightly on devices with a home bar when in full screen */
+            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            left: 15px;
+            right: 70px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+            padding-top: 20px;
+            pointer-events: none; 
+        }
+
+        .overlay h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        /* --- Cosmetic Action Buttons Style --- */
+        .action-buttons {
+            position: absolute;
+            right: 15px;
+            bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .action-item {
+            color: white;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .action-item .icon {
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 44px;
+            height: 44px;
+            background-color: rgba(40,40,40,0.6);
+            border-radius: 50%;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">
+            <div class="matchup">
+                <div class="team">
+                    <div class="team-logo" style="color: #ff5910;">NYM</div>
+                    <span>14-22</span>
+                </div>
+                <div class="game-time">
+                    <strong>Thu 5/7</strong><br>
+                    3:10 PM ET
+                </div>
+                <div class="team">
+                    <div class="team-logo" style="color: #6a5acd;">COL</div>
+                    <span>14-23</span>
+                </div>
+            </div>
+        </div>
+        <div class="nav-tabs">
+            <span>Watch</span>
+            <span>Audio</span>
+            <span>Preview</span>
+            <span>Tickets</span>
+            <span>Story</span>
+        </div>
+
+        <div class="reels-header">Reels</div>
+
+        <div class="reels-container" id="reelsContainer">
+            </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const videoList = [
+                { title: "Tyrone Taylor lays out!😎⚾", src: "https://bdata-producedclips.mlb.com/596b9f98-746e-42a9-9df7-3fca0ad3945f.mp4" },
+                { title: "Mark Vientos lets this one fly 🤑", src: "https://bdata-producedclips.mlb.com/a15a5bfb-7cca-4fda-a7b2-17f8bbc66709.mp4" },
+                { title: "Juan-derful! Soto hits his first triple of 2026!🏃‍➡️", src: "https://bdata-producedclips.mlb.com/0f716208-3455-4e19-bd80-785ed442460a.mp4" },
+                { title: "Soto starts off HOT🔥", src: "https://bdata-producedclips.mlb.com/afbcfe4d-717a-4bd6-bb3c-80eeb720ddd1.mp4" },
+                { title: "Vertical Test: Mets Camp", src: "https://bdata-producedclips.mlb.com/237d9d7c-f2c7-45b9-aee5-dbf4be351824.mp4" },
+                { title: "Carson Benge breaks up the no-no!🚫", src: "https://bdata-producedclips.mlb.com/49575d88-d64e-4ad1-818e-e552007cfc48.mp4" },
+                { title: "Carson Benge defies gravity with a diving catch 🥰", src: "https://bdata-producedclips.mlb.com/6af064a9-92fb-446f-b2f4-d923842ddcfb.mp4" },
+                { title: "Vientos stays HOT with his second home run!♨️", src: "https://bdata-producedclips.mlb.com/413b38fd-f891-4cf7-bb20-8ab30d118d20.mp4" },
+                { title: "Swaggy V gets the Mets on the scoreboard!😎", src: "https://bdata-producedclips.mlb.com/f55c2461-b39b-4c17-9bf3-7401ffe1d5ac.mp4" },
+                { title: "Bichette barrels an RBI single to right-center 👏", src: "https://bdata-producedclips.mlb.com/f0aa2467-a6b4-4ed9-af42-ee4293d4dc77.mp4" },
+                { title: "Juan Soto goes OPPO🌮", src: "https://bdata-producedclips.mlb.com/7863017a-bbba-4c2d-8f1f-c6ced9b4eb33.mp4" },
+                { title: "You just gotta Bo-lieve!!!! 🙌", src: "https://bdata-producedclips.mlb.com/ffda2f8c-5a7f-44bb-bf83-a916cc9d429c.mp4" },
+                { title: "Tyrone Taylor's solo homer 😎", src: "https://bdata-producedclips.mlb.com/0a389f5d-d065-4511-93ac-96b9098f6282.mp4" },
+                { title: "Carson Benge rips a homer to extend the lead! 🔥", src: "https://bdata-producedclips.mlb.com/9fbc9d02-6c5d-4b73-8592-34d5d450b953.mp4" },
+                { title: "Brett Baty sends one into the second deck 😳", src: "https://bdata-producedclips.mlb.com/d409f5d4-0c37-4964-9264-4297d13c6d1e.mp4" },
+                { title: "Mets get in the win column 🎉", src: "https://bdata-producedclips.mlb.com/26629b89-16b0-49fd-b65a-b37c0ff401f1.mp4" },
+                { title: "Francisco Lindor shows off the hops 🐇", src: "https://bdata-producedclips.mlb.com/f3d6e3fb-9ff0-44c1-8d93-a5133614c9c2.mp4" },
+                { title: "Lindor gives the Mets a lead! 🍎", src: "https://bdata-producedclips.mlb.com/ac9ccd26-8e6d-4d68-8cc6-b16d04ddecbf.mp4" },
+                { title: "Leadoff Lindor! 💥", src: "https://bdata-producedclips.mlb.com/ffffc994-0080-4a4d-a5b5-e461ce3f4c60.mp4" },
+                { title: "Benge's BEAUTIFUL diving grab 🤯", src: "https://bdata-producedclips.mlb.com/a6198e26-2ede-4e8e-9f46-4aa0623b83d5.mp4" },
+                { title: "Jorge Polanco's first homer with the Mets!🔥", src: "https://bdata-producedclips.mlb.com/4d775c36-105b-44d6-bd28-734b5c124c5a.mp4" },
+                { title: "Bo Bichette's first homer as a Met!😍", src: "https://bdata-producedclips.mlb.com/d2c487ec-79a9-42aa-84d0-b2a4fa91157b.mp4" },
+                { title: "Mark Vientos rolls to make the play 👏", src: "https://bdata-producedclips.mlb.com/56dc0705-09e9-41e4-a1c8-b4d2d937a09d.mp4" },
+                { title: "Welcome to New York Luis Robert Jr.!", src: "https://bdata-producedclips.mlb.com/123dee3e-0135-416e-9495-de9afb7cef7e.mp4" },
+                { title: "Soto sends it out 😍", src: "https://bdata-producedclips.mlb.com/84b5b559-b5ac-451f-8a1b-364564406be1.mp4" }
+            ];
+
+            const container = document.getElementById('reelsContainer');
+
+            videoList.forEach(video => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'reel-wrapper';
+
+                // playsinline is critical for iOS Safari to prevent it from launching the native full screen video player automatically
+                wrapper.innerHTML = `
+                    <video src="${video.src}" muted playsinline></video>
+                    <div class="overlay">
+                        <h3>${video.title}</h3>
+                    </div>
+                    <div class="action-buttons">
+                        <div class="action-item follow">
+                            <span class="icon">👤+</span>
+                            <span class="label">Follow</span>
+                        </div>
+                        <div class="action-item share">
+                            <span class="icon">↗️</span>
+                            <span class="label">Share</span>
+                        </div>
+                        <div class="action-item mute-btn">
+                            <span class="icon">🔇</span>
+                            <span class="label">Mute</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
+
+            const videos = document.querySelectorAll('video');
+            const wrappers = document.querySelectorAll('.reel-wrapper');
+            const actionButtonSidebars = document.querySelectorAll('.action-buttons');
+            
+            let observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target;
+                    if (entry.isIntersecting) {
+                        // iOS requires playsinline and muted for this promise to resolve without interaction
+                        video.play().catch(e => console.log("Autoplay prevented:", e));
+                    } else {
+                        video.pause();
+                        video.currentTime = 0;
+                    }
+                });
+            }, {
+                root: container,
+                threshold: 0.6
+            });
+
+            actionButtonSidebars.forEach(sidebar => {
+                // Use touchstart and click to catch mobile events properly
+                ['click', 'touchstart'].forEach(evt => 
+                    sidebar.addEventListener(evt, (e) => {
+                        e.stopPropagation();
+                    })
+                );
+            });
+
+            wrappers.forEach((wrapper, index) => {
+                const video = wrapper.querySelector('video');
+                
+                if (video) {
+                    observer.observe(video);
+                    
+                    wrapper.addEventListener('click', () => {
+                        video.muted = !video.muted;
+                        container.classList.toggle('in-app-fullscreen');
+                        // Timeout helps iOS recalculate layout bounds before snapping
+                        setTimeout(() => wrapper.scrollIntoView({ behavior: 'auto' }), 50);
+                    });
+
+                    video.addEventListener('ended', () => {
+                        if (index + 1 < wrappers.length) {
+                            wrappers[index + 1].scrollIntoView({ behavior: 'smooth' });
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
