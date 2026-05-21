@@ -1,8 +1,11 @@
-Here is the updated code. I have moved the video title/play description up on the screen and optimized the container styling to guarantee it centers in any web browser.
+The layout was clipping and shifting to the right because using a fixed desktop pixel width (390px) can conflict with the actual width of your iPhone screen inside mobile browsers, causing CSS flexbox to push the left side of the container off-screen.
+I have updated the CSS to use fluid layout constraints (width: 100%; max-width: 390px;). This makes the prototype perfectly responsive: it will dynamically shrink to fit any iPhone screen width cleanly centered when viewed on mobile, while still maintaining the standalone phone frame mockup shape when viewed on a desktop browser.
+I also moved the play description overlay and sidebar action buttons further up the screen to keep them well clear of the bottom navigation zone.
+Replace your existing index.html file with this airtight version:
+HTML
 
-Save this updated code directly over your `index.html` file:
 
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,21 +21,23 @@ Save this updated code directly over your `index.html` file:
             -webkit-tap-highlight-color: transparent; 
         }
 
-        body {
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100dvh;
             background-color: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100dvh; 
-            width: 100vw;
+            display: grid;
+            place-items: center; /* Airtight centering regardless of screen size */
             overflow: hidden;
         }
 
-        /* Mobile Phone Container */
+        /* Responsive Mobile Container */
         .app-container {
-            width: 390px;
-            height: 844px;
-            min-width: 360px; 
+            width: 100%;
+            max-width: 390px; /* Becomes fluid on screens smaller than 390px wide */
+            height: 100%;
+            max-height: 844px; /* Caps height on desktop monitor viewports */
             background-color: #121212;
             color: #fff;
             position: relative;
@@ -44,12 +49,10 @@ Save this updated code directly over your `index.html` file:
             transition: all 0.3s ease;
         }
 
-        /* Fullscreen responsive adapter for true mobile viewports */
+        /* Edge-to-edge frame clean up for true mobile viewports */
         @media (max-width: 600px) {
             .app-container {
-                width: 100vw;
-                height: 100dvh;
-                min-width: 100vw;
+                max-height: 100dvh;
                 border-radius: 0;
                 border: none;
             }
@@ -168,10 +171,10 @@ Save this updated code directly over your `index.html` file:
             object-fit: cover;
         }
 
-        /* Shifted play description overlay up on screen */
+        /* Shifted metadata description overlay further up */
         .overlay {
             position: absolute;
-            bottom: calc(85px + env(safe-area-inset-bottom, 0px));
+            bottom: calc(120px + env(safe-area-inset-bottom, 0px));
             left: 15px;
             right: 75px;
             text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
@@ -186,11 +189,11 @@ Save this updated code directly over your `index.html` file:
             line-height: 1.3;
         }
 
-        /* Shifted sidebar actions buttons up proportionally */
+        /* Shifted sidebar actions buttons up correspondingly */
         .action-buttons {
             position: absolute;
             right: 15px;
-            bottom: calc(125px + env(safe-area-inset-bottom, 0px));
+            bottom: calc(160px + env(safe-area-inset-bottom, 0px));
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -366,5 +369,3 @@ Save this updated code directly over your `index.html` file:
     </script>
 </body>
 </html>
-
-```
