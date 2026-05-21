@@ -1,3 +1,10 @@
+Here is the fully updated prototype code. The video list has been completely replaced with the 25 new clips extracted from your JSON payload, map-matching each `.mp4` link to its proper title description.
+
+All iPhone optimizations remain completely intact—including dynamic dynamic viewport sizing (`100dvh`), iOS notch safe area buffer handling, web-webkit smooth momentum snapping, and `playsinline` properties to ensure zero native fullscreen overrides on Safari.
+
+Save this updated code over your `index.html` file:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +17,6 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            /* Prevent iOS tap highlight color */
             -webkit-tap-highlight-color: transparent; 
         }
 
@@ -19,11 +25,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100dvh; /* dvh fixes the iOS Safari bottom address bar bug */
+            height: 100dvh; 
             overflow: hidden;
         }
 
-        /* Mobile Phone Container (Desktop view) */
+        /* Mobile Phone Container (Desktop perspective layout) */
         .app-container {
             width: 390px;
             height: 844px;
@@ -38,7 +44,7 @@
             transition: all 0.3s ease;
         }
 
-        /* When opened on an actual mobile device, take over the whole screen */
+        /* Scaled dynamic responsive profile when loaded on real native mobile window viewports */
         @media (max-width: 600px) {
             .app-container {
                 width: 100vw;
@@ -50,7 +56,6 @@
 
         /* Mockup Top Header / Matchup Info */
         .header {
-            /* Add safe area inset so the notch/dynamic island doesn't block the score */
             padding: env(safe-area-inset-top, 15px) 15px 15px 15px;
             background-color: #1a1b1f;
             border-bottom: 1px solid #2a2a2a;
@@ -109,16 +114,13 @@
         .reels-container {
             flex: 1;
             overflow-y: scroll;
-            /* iOS momentum scrolling */
             -webkit-overflow-scrolling: touch; 
             scroll-snap-type: y mandatory;
             background-color: #000;
-            /* Hide scrollbar */
             -ms-overflow-style: none;
             scrollbar-width: none;
             position: relative;
             transition: all 0.3s ease;
-            /* Ensure bottom of reels area clears the iPhone home indicator */
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
@@ -153,7 +155,6 @@
 
         .overlay {
             position: absolute;
-            /* Push text up slightly on devices with a home bar when in full screen */
             bottom: calc(20px + env(safe-area-inset-bottom, 0px));
             left: 15px;
             right: 70px;
@@ -241,20 +242,14 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Updated video source tracking matrix mapped directly from the payload keys
             const videoList = [
-                { title: "Tyrone Taylor lays out!😎⚾", src: "https://bdata-producedclips.mlb.com/596b9f98-746e-42a9-9df7-3fca0ad3945f.mp4" },
-                { title: "Mark Vientos lets this one fly 🤑", src: "https://bdata-producedclips.mlb.com/a15a5bfb-7cca-4fda-a7b2-17f8bbc66709.mp4" },
                 { title: "Juan-derful! Soto hits his first triple of 2026!🏃‍➡️", src: "https://bdata-producedclips.mlb.com/0f716208-3455-4e19-bd80-785ed442460a.mp4" },
                 { title: "Soto starts off HOT🔥", src: "https://bdata-producedclips.mlb.com/afbcfe4d-717a-4bd6-bb3c-80eeb720ddd1.mp4" },
                 { title: "Vertical Test: Mets Camp", src: "https://bdata-producedclips.mlb.com/237d9d7c-f2c7-45b9-aee5-dbf4be351824.mp4" },
                 { title: "Carson Benge breaks up the no-no!🚫", src: "https://bdata-producedclips.mlb.com/49575d88-d64e-4ad1-818e-e552007cfc48.mp4" },
                 { title: "Carson Benge defies gravity with a diving catch 🥰", src: "https://bdata-producedclips.mlb.com/6af064a9-92fb-446f-b2f4-d923842ddcfb.mp4" },
-                { title: "Vientos stays HOT with his second home run!♨️", src: "https://bdata-producedclips.mlb.com/413b38fd-f891-4cf7-bb20-8ab30d118d20.mp4" },
-                { title: "Swaggy V gets the Mets on the scoreboard!😎", src: "https://bdata-producedclips.mlb.com/f55c2461-b39b-4c17-9bf3-7401ffe1d5ac.mp4" },
-                { title: "Bichette barrels an RBI single to right-center 👏", src: "https://bdata-producedclips.mlb.com/f0aa2467-a6b4-4ed9-af42-ee4293d4dc77.mp4" },
-                { title: "Juan Soto goes OPPO🌮", src: "https://bdata-producedclips.mlb.com/7863017a-bbba-4c2d-8f1f-c6ced9b4eb33.mp4" },
-                { title: "You just gotta Bo-lieve!!!! 🙌", src: "https://bdata-producedclips.mlb.com/ffda2f8c-5a7f-44bb-bf83-a916cc9d429c.mp4" },
-                { title: "Tyrone Taylor's solo homer 😎", src: "https://bdata-producedclips.mlb.com/0a389f5d-d065-4511-93ac-96b9098f6282.mp4" },
+                { title: "Juan Soto goes OPPO taco🌮", src: "https://bdata-producedclips.mlb.com/7863017a-bbba-4c2d-8f1f-c6ced9b4eb33.mp4" },
                 { title: "Carson Benge rips a homer to extend the lead! 🔥", src: "https://bdata-producedclips.mlb.com/9fbc9d02-6c5d-4b73-8592-34d5d450b953.mp4" },
                 { title: "Brett Baty sends one into the second deck 😳", src: "https://bdata-producedclips.mlb.com/d409f5d4-0c37-4964-9264-4297d13c6d1e.mp4" },
                 { title: "Mets get in the win column 🎉", src: "https://bdata-producedclips.mlb.com/26629b89-16b0-49fd-b65a-b37c0ff401f1.mp4" },
@@ -266,7 +261,14 @@
                 { title: "Bo Bichette's first homer as a Met!😍", src: "https://bdata-producedclips.mlb.com/d2c487ec-79a9-42aa-84d0-b2a4fa91157b.mp4" },
                 { title: "Mark Vientos rolls to make the play 👏", src: "https://bdata-producedclips.mlb.com/56dc0705-09e9-41e4-a1c8-b4d2d937a09d.mp4" },
                 { title: "Welcome to New York Luis Robert Jr.!", src: "https://bdata-producedclips.mlb.com/123dee3e-0135-416e-9495-de9afb7cef7e.mp4" },
-                { title: "Soto sends it out 😍", src: "https://bdata-producedclips.mlb.com/84b5b559-b5ac-451f-8a1b-364564406be1.mp4" }
+                { title: "Soto sends it out 😍", src: "https://bdata-producedclips.mlb.com/84b5b559-b5ac-451f-8a1b-364564406be1.mp4" },
+                { title: "Mark Vientos' first homer of the year 🎉", src: "https://bdata-producedclips.mlb.com/32e4b5c3-a6f7-41bf-b2bd-ed7250321b4a.mp4" },
+                { title: "Ronny Mauricio walks it off in extras 🔥", src: "https://bdata-producedclips.mlb.com/bef9bd63-94d2-408b-a3c4-5bf18c11bb06.mp4" },
+                { title: "Francisco Lindor GETS 🆙 for the snag ", src: "https://bdata-producedclips.mlb.com/faab1ae2-2b0b-4790-b2dc-4e6535e4491e.mp4" },
+                { title: "Tyrone Taylor cranks a three-run homer 🔥", src: "https://bdata-producedclips.mlb.com/89aaea72-3fb5-483b-9b0b-25b4812fcb9b.mp4" },
+                { title: "Francisco Alvarez hits his second homer! ✌️", src: "https://bdata-producedclips.mlb.com/c2c5f0c3-ba6b-4fad-8637-1d697fa4798e.mp4" },
+                { title: "Jared Young ROBS extra bases with a diving stop! 😱", src: "https://bdata-producedclips.mlb.com/38137bfc-f728-4737-9e13-d5762de5bc3c.mp4" },
+                { title: "Bo's balancing act gives the Mets the lead!", src: "https://bdata-producedclips.mlb.com/cc41c63d-dbbd-48cd-80a2-846f658630aa.mp4" }
             ];
 
             const container = document.getElementById('reelsContainer');
@@ -275,7 +277,6 @@
                 const wrapper = document.createElement('div');
                 wrapper.className = 'reel-wrapper';
 
-                // playsinline is critical for iOS Safari to prevent it from launching the native full screen video player automatically
                 wrapper.innerHTML = `
                     <video src="${video.src}" muted playsinline></video>
                     <div class="overlay">
@@ -307,8 +308,7 @@
                 entries.forEach(entry => {
                     const video = entry.target;
                     if (entry.isIntersecting) {
-                        // iOS requires playsinline and muted for this promise to resolve without interaction
-                        video.play().catch(e => console.log("Autoplay prevented:", e));
+                        video.play().catch(e => console.log("Autoplay blocked:", e));
                     } else {
                         video.pause();
                         video.currentTime = 0;
@@ -320,7 +320,6 @@
             });
 
             actionButtonSidebars.forEach(sidebar => {
-                // Use touchstart and click to catch mobile events properly
                 ['click', 'touchstart'].forEach(evt => 
                     sidebar.addEventListener(evt, (e) => {
                         e.stopPropagation();
@@ -337,7 +336,6 @@
                     wrapper.addEventListener('click', () => {
                         video.muted = !video.muted;
                         container.classList.toggle('in-app-fullscreen');
-                        // Timeout helps iOS recalculate layout bounds before snapping
                         setTimeout(() => wrapper.scrollIntoView({ behavior: 'auto' }), 50);
                     });
 
@@ -352,3 +350,5 @@
     </script>
 </body>
 </html>
+
+```
