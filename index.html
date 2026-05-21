@@ -1,8 +1,6 @@
-Here is the fully updated prototype code. The video list has been completely replaced with the 25 new clips extracted from your JSON payload, map-matching each `.mp4` link to its proper title description.
+Here is the updated code. I have moved the video title/play description up on the screen and optimized the container styling to guarantee it centers in any web browser.
 
-All iPhone optimizations remain completely intact—including dynamic dynamic viewport sizing (`100dvh`), iOS notch safe area buffer handling, web-webkit smooth momentum snapping, and `playsinline` properties to ensure zero native fullscreen overrides on Safari.
-
-Save this updated code over your `index.html` file:
+Save this updated code directly over your `index.html` file:
 
 ```html
 <!DOCTYPE html>
@@ -26,13 +24,15 @@ Save this updated code over your `index.html` file:
             justify-content: center;
             align-items: center;
             height: 100dvh; 
+            width: 100vw;
             overflow: hidden;
         }
 
-        /* Mobile Phone Container (Desktop perspective layout) */
+        /* Mobile Phone Container */
         .app-container {
             width: 390px;
             height: 844px;
+            min-width: 360px; 
             background-color: #121212;
             color: #fff;
             position: relative;
@@ -44,17 +44,18 @@ Save this updated code over your `index.html` file:
             transition: all 0.3s ease;
         }
 
-        /* Scaled dynamic responsive profile when loaded on real native mobile window viewports */
+        /* Fullscreen responsive adapter for true mobile viewports */
         @media (max-width: 600px) {
             .app-container {
                 width: 100vw;
                 height: 100dvh;
+                min-width: 100vw;
                 border-radius: 0;
                 border: none;
             }
         }
 
-        /* Mockup Top Header / Matchup Info */
+        /* Header / Matchup Info */
         .header {
             padding: env(safe-area-inset-top, 15px) 15px 15px 15px;
             background-color: #1a1b1f;
@@ -66,6 +67,7 @@ Save this updated code over your `index.html` file:
             justify-content: space-between;
             align-items: center;
             padding: 10px 0;
+            width: 100%;
         }
 
         .team {
@@ -73,6 +75,11 @@ Save this updated code over your `index.html` file:
             flex-direction: column;
             align-items: center;
             font-weight: bold;
+            flex: 1;
+        }
+
+        .team span {
+            white-space: nowrap; 
         }
 
         .team-logo {
@@ -91,12 +98,15 @@ Save this updated code over your `index.html` file:
             text-align: center;
             font-size: 14px;
             color: #aaa;
+            flex: 1.5;
         }
 
+        /* Nav Tabs Layout */
         .nav-tabs {
             display: flex;
             justify-content: space-around;
-            padding: 15px 0;
+            gap: 10px;
+            padding: 15px 10px;
             background-color: #121212;
             border-bottom: 1px solid #2a2a2a;
             font-size: 14px;
@@ -104,11 +114,16 @@ Save this updated code over your `index.html` file:
             color: #4a90e2;
         }
 
+        .nav-tabs span {
+            white-space: nowrap; 
+        }
+
         /* Reels Player Section */
         .reels-header {
             padding: 15px;
             font-size: 20px;
             font-weight: bold;
+            background-color: #121212;
         }
 
         .reels-container {
@@ -124,7 +139,7 @@ Save this updated code over your `index.html` file:
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        /* IN-APP FULLSCREEN CLASS */
+        /* IN-APP FULLSCREEN MODE */
         .reels-container.in-app-fullscreen {
             position: absolute;
             top: 0;
@@ -153,27 +168,29 @@ Save this updated code over your `index.html` file:
             object-fit: cover;
         }
 
+        /* Shifted play description overlay up on screen */
         .overlay {
             position: absolute;
-            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            bottom: calc(85px + env(safe-area-inset-bottom, 0px));
             left: 15px;
-            right: 70px;
+            right: 75px;
             text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
-            padding-top: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+            padding-top: 25px;
             pointer-events: none; 
         }
 
         .overlay h3 {
             font-size: 16px;
             margin-bottom: 5px;
+            line-height: 1.3;
         }
 
-        /* --- Cosmetic Action Buttons Style --- */
+        /* Shifted sidebar actions buttons up proportionally */
         .action-buttons {
             position: absolute;
             right: 15px;
-            bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+            bottom: calc(125px + env(safe-area-inset-bottom, 0px));
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -242,7 +259,6 @@ Save this updated code over your `index.html` file:
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Updated video source tracking matrix mapped directly from the payload keys
             const videoList = [
                 { title: "Juan-derful! Soto hits his first triple of 2026!🏃‍➡️", src: "https://bdata-producedclips.mlb.com/0f716208-3455-4e19-bd80-785ed442460a.mp4" },
                 { title: "Soto starts off HOT🔥", src: "https://bdata-producedclips.mlb.com/afbcfe4d-717a-4bd6-bb3c-80eeb720ddd1.mp4" },
