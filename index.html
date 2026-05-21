@@ -1,11 +1,10 @@
-The layout was clipping and shifting to the right because using a fixed desktop pixel width (390px) can conflict with the actual width of your iPhone screen inside mobile browsers, causing CSS flexbox to push the left side of the container off-screen.
-I have updated the CSS to use fluid layout constraints (width: 100%; max-width: 390px;). This makes the prototype perfectly responsive: it will dynamically shrink to fit any iPhone screen width cleanly centered when viewed on mobile, while still maintaining the standalone phone frame mockup shape when viewed on a desktop browser.
-I also moved the play description overlay and sidebar action buttons further up the screen to keep them well clear of the bottom navigation zone.
-Replace your existing index.html file with this airtight version:
-HTML
+To make the video completely fill the smartphone display when clicked—without any letterboxing or black bars at the top and bottom—we need to remove the hard restrictions on the aspect-ratio box and let the video canvas natively scale to `100%` width and height using `object-fit: cover`.
 
+This allows the video to dynamically scale and seamlessly fit any modern smartphone screen ratio (like an iPhone's native `9:19.5` profile), mirroring the edge-to-edge behavior of native apps like TikTok and Instagram Reels.
 
+Replace your existing `index.html` file with this updated, edge-to-edge version:
 
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,16 +27,15 @@ HTML
             height: 100dvh;
             background-color: #000;
             display: grid;
-            place-items: center; /* Airtight centering regardless of screen size */
+            place-items: center; 
             overflow: hidden;
         }
 
-        /* Responsive Mobile Container */
+        /* Mobile Phone Container */
         .app-container {
-            width: 100%;
-            max-width: 390px; /* Becomes fluid on screens smaller than 390px wide */
-            height: 100%;
-            max-height: 844px; /* Caps height on desktop monitor viewports */
+            width: 390px;
+            height: 844px;
+            min-width: 360px; 
             background-color: #121212;
             color: #fff;
             position: relative;
@@ -49,7 +47,7 @@ HTML
             transition: all 0.3s ease;
         }
 
-        /* Edge-to-edge frame clean up for true mobile viewports */
+        /* Fullscreen responsive adapter for true mobile viewports */
         @media (max-width: 600px) {
             .app-container {
                 max-height: 100dvh;
@@ -139,7 +137,6 @@ HTML
             scrollbar-width: none;
             position: relative;
             transition: all 0.3s ease;
-            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         /* IN-APP FULLSCREEN MODE */
@@ -163,24 +160,39 @@ HTML
             scroll-snap-align: start;
             position: relative;
             cursor: pointer;
+            background-color: #000;
+        }
+
+        /* Video fills wrapper completely, letting object-fit manage scaling */
+        .video-frame {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
         }
 
         video {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: cover; /* Ensures edge-to-edge presentation without letterboxing */
         }
 
-        /* Shifted metadata description overlay further up */
+        /* UI Overlay Adjustments */
         .overlay {
             position: absolute;
-            bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
             left: 15px;
             right: 75px;
             text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
             background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
             padding-top: 25px;
             pointer-events: none; 
+            z-index: 5;
+        }
+
+        /* Add extra breathing room for the overlay text when in full-screen mode */
+        .in-app-fullscreen .overlay {
+            bottom: calc(40px + env(safe-area-inset-bottom, 0px));
         }
 
         .overlay h3 {
@@ -189,16 +201,21 @@ HTML
             line-height: 1.3;
         }
 
-        /* Shifted sidebar actions buttons up correspondingly */
+        /* Sidebar Buttons */
         .action-buttons {
             position: absolute;
             right: 15px;
-            bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+            bottom: calc(40px + env(safe-area-inset-bottom, 0px));
             display: flex;
             flex-direction: column;
             gap: 20px;
             align-items: center;
             z-index: 10;
+        }
+
+        /* Adjust button cluster height when full screen is active */
+        .in-app-fullscreen .action-buttons {
+            bottom: calc(60px + env(safe-area-inset-bottom, 0px));
         }
 
         .action-item {
@@ -297,22 +314,24 @@ HTML
                 wrapper.className = 'reel-wrapper';
 
                 wrapper.innerHTML = `
-                    <video src="${video.src}" muted playsinline></video>
-                    <div class="overlay">
-                        <h3>${video.title}</h3>
-                    </div>
-                    <div class="action-buttons">
-                        <div class="action-item follow">
-                            <span class="icon">👤+</span>
-                            <span class="label">Follow</span>
+                    <div class="video-frame">
+                        <video src="${video.src}" muted playsinline></video>
+                        <div class="overlay">
+                            <h3>${video.title}</h3>
                         </div>
-                        <div class="action-item share">
-                            <span class="icon">↗️</span>
-                            <span class="label">Share</span>
-                        </div>
-                        <div class="action-item mute-btn">
-                            <span class="icon">🔇</span>
-                            <span class="label">Mute</span>
+                        <div class="action-buttons">
+                            <div class="action-item follow">
+                                <span class="icon">👤+</span>
+                                <span class="label">Follow</span>
+                            </div>
+                            <div class="action-item share">
+                                <span class="icon">↗️</span>
+                                <span class="label">Share</span>
+                            </div>
+                            <div class="action-item mute-btn">
+                                <span class="icon">🔇</span>
+                                <span class="label">Mute</span>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -369,3 +388,5 @@ HTML
     </script>
 </body>
 </html>
+
+```
