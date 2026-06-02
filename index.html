@@ -1,8 +1,6 @@
-To make the video completely fill the smartphone display when clicked—without any letterboxing or black bars at the top and bottom—we need to remove the hard restrictions on the aspect-ratio box and let the video canvas natively scale to `100%` width and height using `object-fit: cover`.
+Here is the updated prototype code. I have extracted the three new videos from your JSON payload and prioritized them at the absolute front of the player queue. They will now consistently load as the first three items, followed by the dynamic shorts feed and your core video collection.
 
-This allows the video to dynamically scale and seamlessly fit any modern smartphone screen ratio (like an iPhone's native `9:19.5` profile), mirroring the edge-to-edge behavior of native apps like TikTok and Instagram Reels.
-
-Replace your existing `index.html` file with this updated, edge-to-edge version:
+Save this updated code over your `index.html` file and refresh your browser:
 
 ```html
 <!DOCTYPE html>
@@ -163,7 +161,6 @@ Replace your existing `index.html` file with this updated, edge-to-edge version:
             background-color: #000;
         }
 
-        /* Video fills wrapper completely, letting object-fit manage scaling */
         .video-frame {
             width: 100%;
             height: 100%;
@@ -174,7 +171,7 @@ Replace your existing `index.html` file with this updated, edge-to-edge version:
         video {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Ensures edge-to-edge presentation without letterboxing */
+            object-fit: cover; 
         }
 
         /* UI Overlay Adjustments */
@@ -190,7 +187,6 @@ Replace your existing `index.html` file with this updated, edge-to-edge version:
             z-index: 5;
         }
 
-        /* Add extra breathing room for the overlay text when in full-screen mode */
         .in-app-fullscreen .overlay {
             bottom: calc(40px + env(safe-area-inset-bottom, 0px));
         }
@@ -213,7 +209,6 @@ Replace your existing `index.html` file with this updated, edge-to-edge version:
             z-index: 10;
         }
 
-        /* Adjust button cluster height when full screen is active */
         .in-app-fullscreen .action-buttons {
             bottom: calc(60px + env(safe-area-inset-bottom, 0px));
         }
@@ -241,6 +236,18 @@ Replace your existing `index.html` file with this updated, edge-to-edge version:
             background-color: rgba(40,40,40,0.6);
             border-radius: 50%;
             margin-bottom: 5px;
+        }
+
+        .loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #4a90e2;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -274,12 +281,21 @@ Replace your existing `index.html` file with this updated, edge-to-edge version:
         <div class="reels-header">Reels</div>
 
         <div class="reels-container" id="reelsContainer">
-            </div>
+            <div class="loading-indicator" id="loader">Loading Shorts Feed...</div>
+        </div>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            const videoList = [
+            // These 3 specific videos are forced to stay at the very top of the list execution layout
+            const prioritizedFirstVideos = [
+                { title: "Jacob Misiorowski was firing heat to open the game 🔥", src: "https://bdata-producedclips.mlb.com/043b6d88-750c-4639-9493-4a09ecd801bc.mp4" },
+                { title: "Top 5 home runs that went OUT OF THE PARK! 😲", src: "https://bdata-producedclips.mlb.com/fb269596-7015-49c6-ae52-127f4f92c90f.mp4" },
+                { title: "You never know what you’ll see at the ballpark 👀", src: "https://bdata-producedclips.mlb.com/c5c5a5f3-7e0d-4dc1-abe5-abecde30b09d.mp4" }
+            ];
+
+            // Core background loop video index
+            const hardcodedVideoList = [
                 { title: "Juan-derful! Soto hits his first triple of 2026!🏃‍➡️", src: "https://bdata-producedclips.mlb.com/0f716208-3455-4e19-bd80-785ed442460a.mp4" },
                 { title: "Soto starts off HOT🔥", src: "https://bdata-producedclips.mlb.com/afbcfe4d-717a-4bd6-bb3c-80eeb720ddd1.mp4" },
                 { title: "Vertical Test: Mets Camp", src: "https://bdata-producedclips.mlb.com/237d9d7c-f2c7-45b9-aee5-dbf4be351824.mp4" },
@@ -308,82 +324,132 @@ Replace your existing `index.html` file with this updated, edge-to-edge version:
             ];
 
             const container = document.getElementById('reelsContainer');
+            const targetApiUrl = 'https://dapi.cms.mlbinfra.com/v2/content/en-us/sel-mlb-shorts-video-list-x4431';
+            const secureProxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetApiUrl);
 
-            videoList.forEach(video => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'reel-wrapper';
-
-                wrapper.innerHTML = `
-                    <div class="video-frame">
-                        <video src="${video.src}" muted playsinline></video>
-                        <div class="overlay">
-                            <h3>${video.title}</h3>
-                        </div>
-                        <div class="action-buttons">
-                            <div class="action-item follow">
-                                <span class="icon">👤+</span>
-                                <span class="label">Follow</span>
-                            </div>
-                            <div class="action-item share">
-                                <span class="icon">↗️</span>
-                                <span class="label">Share</span>
-                            </div>
-                            <div class="action-item mute-btn">
-                                <span class="icon">🔇</span>
-                                <span class="label">Mute</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(wrapper);
-            });
-
-            const videos = document.querySelectorAll('video');
-            const wrappers = document.querySelectorAll('.reel-wrapper');
-            const actionButtonSidebars = document.querySelectorAll('.action-buttons');
-            
-            let observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    const video = entry.target;
-                    if (entry.isIntersecting) {
-                        video.play().catch(e => console.log("Autoplay blocked:", e));
-                    } else {
-                        video.pause();
-                        video.currentTime = 0;
-                    }
-                });
-            }, {
-                root: container,
-                threshold: 0.6
-            });
-
-            actionButtonSidebars.forEach(sidebar => {
-                ['click', 'touchstart'].forEach(evt => 
-                    sidebar.addEventListener(evt, (e) => {
-                        e.stopPropagation();
-                    })
-                );
-            });
-
-            wrappers.forEach((wrapper, index) => {
-                const video = wrapper.querySelector('video');
-                
-                if (video) {
-                    observer.observe(video);
+            // Fetch dynamic external Shorts collection
+            fetch(secureProxyUrl)
+                .then(res => {
+                    if (!res.ok) throw new Error('CORS routing restriction signature anomaly');
+                    return res.json();
+                })
+                .then(data => {
+                    let dynamicList = [];
                     
-                    wrapper.addEventListener('click', () => {
-                        video.muted = !video.muted;
-                        container.classList.toggle('in-app-fullscreen');
-                        setTimeout(() => wrapper.scrollIntoView({ behavior: 'auto' }), 50);
-                    });
+                    if (data && Array.isArray(data.items)) {
+                        data.items.forEach(item => {
+                            const titleText = item.title || (item.fields && item.fields.blurb) || "MLB Shorts Highlight";
+                            let videoSrc = null;
 
-                    video.addEventListener('ended', () => {
-                        if (index + 1 < wrappers.length) {
-                            wrappers[index + 1].scrollIntoView({ behavior: 'smooth' });
+                            if (item.fields) {
+                                if (item.fields.playbackScenarios && Array.isArray(item.fields.playbackScenarios)) {
+                                    const match = item.fields.playbackScenarios.find(p => p.location && p.location.includes('.mp4'));
+                                    if (match) videoSrc = match.location;
+                                }
+                                if (!videoSrc && item.fields.url && item.fields.url.includes('.mp4')) {
+                                    videoSrc = item.fields.url;
+                                }
+                            }
+
+                            if (videoSrc) {
+                                dynamicList.push({ title: titleText, src: videoSrc });
+                            }
+                        });
+                    }
+
+                    // Combined structure guarantees items 1, 2, and 3 are always your specific video links
+                    const combinedList = [...prioritizedFirstVideos, ...dynamicList, ...hardcodedVideoList];
+                    buildDOMAndLoad(combinedList);
+                })
+                .catch(err => {
+                    console.warn("Proxy connection error, running localized injection queue mapping:", err);
+                    // Standard fallback keeps prioritized items at the front even if external feed fails
+                    buildDOMAndLoad([...prioritizedFirstVideos, ...hardcodedVideoList]);
+                });
+
+            function buildDOMAndLoad(finalList) {
+                container.innerHTML = ''; 
+
+                finalList.forEach(video => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'reel-wrapper';
+
+                    wrapper.innerHTML = `
+                        <div class="video-frame">
+                            <video src="${video.src}" muted playsinline></video>
+                            <div class="overlay">
+                                <h3>${video.title}</h3>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="action-item follow">
+                                    <span class="icon">👤+</span>
+                                    <span class="label">Follow</span>
+                                </div>
+                                <div class="action-item share">
+                                    <span class="icon">↗️</span>
+                                    <span class="label">Share</span>
+                                </div>
+                                <div class="action-item mute-btn">
+                                    <span class="icon">🔇</span>
+                                    <span class="label">Mute</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(wrapper);
+                });
+
+                initializePlayerControls();
+            }
+
+            function initializePlayerControls() {
+                const videos = document.querySelectorAll('video');
+                const wrappers = document.querySelectorAll('.reel-wrapper');
+                const actionButtonSidebars = document.querySelectorAll('.action-buttons');
+                
+                let observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        const video = entry.target;
+                        if (entry.isIntersecting) {
+                            video.play().catch(e => console.log("Autoplay configuration map initialization:", e));
+                        } else {
+                            video.pause();
+                            video.currentTime = 0;
                         }
                     });
-                }
-            });
+                }, {
+                    root: container,
+                    threshold: 0.6
+                });
+
+                actionButtonSidebars.forEach(sidebar => {
+                    ['click', 'touchstart'].forEach(evt => 
+                        sidebar.addEventListener(evt, (e) => {
+                            e.stopPropagation();
+                        })
+                    );
+                });
+
+                wrappers.forEach((wrapper, index) => {
+                    const video = wrapper.querySelector('video');
+                    
+                    if (video) {
+                        observer.observe(video);
+                        
+                        wrapper.addEventListener('click', () => {
+                            video.muted = !video.muted;
+                            container.classList.toggle('in-app-fullscreen');
+                            setTimeout(() => wrapper.scrollIntoView({ behavior: 'auto' }), 50);
+                        });
+
+                        video.addEventListener('ended', () => {
+                            if (index + 1 < wrappers.length) {
+                                wrappers[index + 1].scrollIntoView({ behavior: 'smooth' });
+                            }
+                        });
+                    }
+                });
+            }
         });
     </script>
 </body>
