@@ -1,8 +1,3 @@
-Here is the updated prototype code. I have extracted the three new videos from your JSON payload and prioritized them at the absolute front of the player queue. They will now consistently load as the first three items, followed by the dynamic shorts feed and your core video collection.
-
-Save this updated code over your `index.html` file and refresh your browser:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -237,18 +232,6 @@ Save this updated code over your `index.html` file and refresh your browser:
             border-radius: 50%;
             margin-bottom: 5px;
         }
-
-        .loading-indicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #4a90e2;
-            font-weight: 600;
-            font-size: 16px;
-            text-align: center;
-            pointer-events: none;
-        }
     </style>
 </head>
 <body>
@@ -281,21 +264,14 @@ Save this updated code over your `index.html` file and refresh your browser:
         <div class="reels-header">Reels</div>
 
         <div class="reels-container" id="reelsContainer">
-            <div class="loading-indicator" id="loader">Loading Shorts Feed...</div>
-        </div>
+            </div>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // These 3 specific videos are forced to stay at the very top of the list execution layout
-            const prioritizedFirstVideos = [
-                { title: "Jacob Misiorowski was firing heat to open the game 🔥", src: "https://bdata-producedclips.mlb.com/043b6d88-750c-4639-9493-4a09ecd801bc.mp4" },
-                { title: "Top 5 home runs that went OUT OF THE PARK! 😲", src: "https://bdata-producedclips.mlb.com/fb269596-7015-49c6-ae52-127f4f92c90f.mp4" },
-                { title: "You never know what you’ll see at the ballpark 👀", src: "https://bdata-producedclips.mlb.com/c5c5a5f3-7e0d-4dc1-abe5-abecde30b09d.mp4" }
-            ];
-
-            // Core background loop video index
-            const hardcodedVideoList = [
+            const videoList = [
+                // New video added to the top of the array
+                { title: "Aaron Judge Highlight 👑", src: "https://mlbn-distro.mlb.com/temporary/JUDGE_SOCIAL_VERTICAL_SAMPLE-969323.mp4" },
                 { title: "Juan-derful! Soto hits his first triple of 2026!🏃‍➡️", src: "https://bdata-producedclips.mlb.com/0f716208-3455-4e19-bd80-785ed442460a.mp4" },
                 { title: "Soto starts off HOT🔥", src: "https://bdata-producedclips.mlb.com/afbcfe4d-717a-4bd6-bb3c-80eeb720ddd1.mp4" },
                 { title: "Vertical Test: Mets Camp", src: "https://bdata-producedclips.mlb.com/237d9d7c-f2c7-45b9-aee5-dbf4be351824.mp4" },
@@ -324,135 +300,83 @@ Save this updated code over your `index.html` file and refresh your browser:
             ];
 
             const container = document.getElementById('reelsContainer');
-            const targetApiUrl = 'https://dapi.cms.mlbinfra.com/v2/content/en-us/sel-mlb-shorts-video-list-x4431';
-            const secureProxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetApiUrl);
 
-            // Fetch dynamic external Shorts collection
-            fetch(secureProxyUrl)
-                .then(res => {
-                    if (!res.ok) throw new Error('CORS routing restriction signature anomaly');
-                    return res.json();
-                })
-                .then(data => {
-                    let dynamicList = [];
-                    
-                    if (data && Array.isArray(data.items)) {
-                        data.items.forEach(item => {
-                            const titleText = item.title || (item.fields && item.fields.blurb) || "MLB Shorts Highlight";
-                            let videoSrc = null;
+            videoList.forEach(video => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'reel-wrapper';
 
-                            if (item.fields) {
-                                if (item.fields.playbackScenarios && Array.isArray(item.fields.playbackScenarios)) {
-                                    const match = item.fields.playbackScenarios.find(p => p.location && p.location.includes('.mp4'));
-                                    if (match) videoSrc = match.location;
-                                }
-                                if (!videoSrc && item.fields.url && item.fields.url.includes('.mp4')) {
-                                    videoSrc = item.fields.url;
-                                }
-                            }
-
-                            if (videoSrc) {
-                                dynamicList.push({ title: titleText, src: videoSrc });
-                            }
-                        });
-                    }
-
-                    // Combined structure guarantees items 1, 2, and 3 are always your specific video links
-                    const combinedList = [...prioritizedFirstVideos, ...dynamicList, ...hardcodedVideoList];
-                    buildDOMAndLoad(combinedList);
-                })
-                .catch(err => {
-                    console.warn("Proxy connection error, running localized injection queue mapping:", err);
-                    // Standard fallback keeps prioritized items at the front even if external feed fails
-                    buildDOMAndLoad([...prioritizedFirstVideos, ...hardcodedVideoList]);
-                });
-
-            function buildDOMAndLoad(finalList) {
-                container.innerHTML = ''; 
-
-                finalList.forEach(video => {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'reel-wrapper';
-
-                    wrapper.innerHTML = `
-                        <div class="video-frame">
-                            <video src="${video.src}" muted playsinline></video>
-                            <div class="overlay">
-                                <h3>${video.title}</h3>
+                wrapper.innerHTML = `
+                    <div class="video-frame">
+                        <video src="${video.src}" muted playsinline></video>
+                        <div class="overlay">
+                            <h3>${video.title}</h3>
+                        </div>
+                        <div class="action-buttons">
+                            <div class="action-item follow">
+                                <span class="icon">👤+</span>
+                                <span class="label">Follow</span>
                             </div>
-                            <div class="action-buttons">
-                                <div class="action-item follow">
-                                    <span class="icon">👤+</span>
-                                    <span class="label">Follow</span>
-                                </div>
-                                <div class="action-item share">
-                                    <span class="icon">↗️</span>
-                                    <span class="label">Share</span>
-                                </div>
-                                <div class="action-item mute-btn">
-                                    <span class="icon">🔇</span>
-                                    <span class="label">Mute</span>
-                                </div>
+                            <div class="action-item share">
+                                <span class="icon">↗️</span>
+                                <span class="label">Share</span>
+                            </div>
+                            <div class="action-item mute-btn">
+                                <span class="icon">🔇</span>
+                                <span class="label">Mute</span>
                             </div>
                         </div>
-                    `;
-                    container.appendChild(wrapper);
-                });
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
 
-                initializePlayerControls();
-            }
-
-            function initializePlayerControls() {
-                const videos = document.querySelectorAll('video');
-                const wrappers = document.querySelectorAll('.reel-wrapper');
-                const actionButtonSidebars = document.querySelectorAll('.action-buttons');
-                
-                let observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        const video = entry.target;
-                        if (entry.isIntersecting) {
-                            video.play().catch(e => console.log("Autoplay configuration map initialization:", e));
-                        } else {
-                            video.pause();
-                            video.currentTime = 0;
-                        }
-                    });
-                }, {
-                    root: container,
-                    threshold: 0.6
-                });
-
-                actionButtonSidebars.forEach(sidebar => {
-                    ['click', 'touchstart'].forEach(evt => 
-                        sidebar.addEventListener(evt, (e) => {
-                            e.stopPropagation();
-                        })
-                    );
-                });
-
-                wrappers.forEach((wrapper, index) => {
-                    const video = wrapper.querySelector('video');
-                    
-                    if (video) {
-                        observer.observe(video);
-                        
-                        wrapper.addEventListener('click', () => {
-                            video.muted = !video.muted;
-                            container.classList.toggle('in-app-fullscreen');
-                            setTimeout(() => wrapper.scrollIntoView({ behavior: 'auto' }), 50);
-                        });
-
-                        video.addEventListener('ended', () => {
-                            if (index + 1 < wrappers.length) {
-                                wrappers[index + 1].scrollIntoView({ behavior: 'smooth' });
-                            }
-                        });
+            const videos = document.querySelectorAll('video');
+            const wrappers = document.querySelectorAll('.reel-wrapper');
+            const actionButtonSidebars = document.querySelectorAll('.action-buttons');
+            
+            let observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target;
+                    if (entry.isIntersecting) {
+                        video.play().catch(e => console.log("Autoplay blocked:", e));
+                    } else {
+                        video.pause();
+                        video.currentTime = 0;
                     }
                 });
-            }
+            }, {
+                root: container,
+                threshold: 0.6
+            });
+
+            actionButtonSidebars.forEach(sidebar => {
+                ['click', 'touchstart'].forEach(evt => 
+                    sidebar.addEventListener(evt, (e) => {
+                        e.stopPropagation();
+                    })
+                );
+            });
+
+            wrappers.forEach((wrapper, index) => {
+                const video = wrapper.querySelector('video');
+                
+                if (video) {
+                    observer.observe(video);
+                    
+                    wrapper.addEventListener('click', () => {
+                        video.muted = !video.muted;
+                        container.classList.toggle('in-app-fullscreen');
+                        setTimeout(() => wrapper.scrollIntoView({ behavior: 'auto' }), 50);
+                    });
+
+                    video.addEventListener('ended', () => {
+                        if (index + 1 < wrappers.length) {
+                            wrappers[index + 1].scrollIntoView({ behavior: 'smooth' });
+                        }
+                    });
+                }
+            });
         });
     </script>
 </body>
 </html>
-
-```
