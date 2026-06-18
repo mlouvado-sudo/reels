@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLATES: The License Plate Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .plate-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen pb-24">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 px-4 py-3 shadow-md">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-black tracking-wider text-amber-400">PLATES</h1>
+                <p class="text-xs text-slate-400">Turn every drive into a game.</p>
+            </div>
+            <div class="text-right">
+                <span id="total-score" class="text-xl font-bold text-emerald-400">0 pts</span>
+                <p class="text-xs text-slate-400"><span id="unique-count">0</span>/52 Spotted</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-4 space-y-6">
+
+        <!-- TAB 1: DRIVE (SPOTTER) -->
+        <section id="tab-drive" class="tab-content active space-y-4">
+            <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl p-4 shadow-lg text-white">
+                <h2 class="font-bold text-lg">🚗 Current Drive Mode</h2>
+                <p class="text-xs text-indigo-200 mb-3">Tap a plate the exact moment you spot it out your window.</p>
+                <div class="flex justify-between items-center bg-slate-900/40 p-3 rounded-xl backdrop-blur-sm">
+                    <div>
+                        <span class="text-xs block text-indigo-200">CURRENT TRIP STREAK</span>
+                        <span id="drive-streak" class="text-lg font-bold">0 Plates 🔥</span>
+                    </div>
+                    <button onclick="resetTrip()" class="text-xs bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 px-3 py-1.5 rounded-lg transition">
+                        Reset Trip
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h3 class="text-sm font-semibold tracking-wide text-slate-400 uppercase">Quick Spotting Panel</h3>
+                <div id="spotting-panel" class="plate-grid">
+                    <!-- States injected dynamically via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: COLLECTION -->
+        <section id="tab-collection" class="tab-content space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold">🗺️ Your Collection Graph</h2>
+                <span id="completion-percentage" class="bg-slate-800 border border-slate-700 text-xs px-2.5 py-1 rounded-full text-amber-400 font-semibold">0% Done</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 text-center">
+                <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                    <span class="text-xs text-slate-400 block">Common</span>
+                    <span id="stats-common" class="text-lg font-bold text-slate-200">0</span>
+                </div>
+                <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                    <span class="text-xs text-amber-400 block">Rare</span>
+                    <span id="stats-rare" class="text-lg font-bold text-amber-400">0</span>
+                </div>
+                <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                    <span class="text-xs text-purple-400 block">Legendary</span>
+                    <span id="stats-legendary" class="text-lg font-bold text-purple-400">0</span>
+                </div>
+            </div>
+
+            <div id="collection-grid" class="plate-grid opacity-90">
+                <!-- Checklist injected dynamically -->
+            </div>
+        </section>
+
+        <!-- TAB 3: CHALLENGES -->
+        <section id="tab-challenges" class="tab-content space-y-4">
+            <h2 class="text-xl font-bold">🏆 Active Roadmap Challenges</h2>
+            <div id="challenges-list" class="space-y-3">
+                <!-- Challenges injected dynamically -->
+            </div>
+        </section>
+
+        <!-- TAB 4: SOCIAL & TRIP LOG -->
+        <section id="tab-social" class="tab-content space-y-6">
+            <div class="space-y-3">
+                <h2 class="text-xl font-bold">👪 Family Leaderboard</h2>
+                <div class="bg-slate-800 rounded-xl border border-slate-700 divide-y divide-slate-700">
+                    <div class="flex justify-between items-center p-3 bg-amber-500/10">
+                        <span class="font-medium text-amber-400">🥇 You (Driver)</span>
+                        <span id="leaderboard-user-score" class="font-bold">0 pts</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 text-slate-300">
+                        <span>🥈 Uncle Dave</span>
+                        <span class="font-semibold text-slate-400">2,400 pts</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 text-slate-400">
+                        <span>🥉 Kiddo (Backseat)</span>
+                        <span class="font-semibold text-slate-500">1,150 pts</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <h2 class="text-xl font-bold">📸 Drive Memory Timeline</h2>
+                <div id="trip-log" class="bg-slate-800 rounded-xl p-4 border border-slate-700 max-h-60 overflow-y-auto space-y-2 text-sm text-slate-400">
+                    <p class="text-center py-4">No plates spotted on this leg of the journey yet.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 px-4 py-2 shadow-xl">
+        <div class="max-w-md mx-auto flex justify-around items-center">
+            <button onclick="switchTab('drive')" id="btn-drive" class="flex flex-col items-center space-y-1 text-amber-400 font-semibold transition">
+                <i class="fa-solid fa-car-side text-lg"></i>
+                <span class="text-xs">Drive</span>
+            </button>
+            <button onclick="switchTab('collection')" id="btn-collection" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition">
+                <i class="fa-solid fa-map text-lg"></i>
+                <span class="text-xs">Collection</span>
+            </button>
+            <button onclick="switchTab('challenges')" id="btn-challenges" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition">
+                <i class="fa-solid fa-trophy text-lg"></i>
+                <span class="text-xs">Challenges</span>
+            </button>
+            <button onclick="switchTab('social')" id="btn-social" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition">
+                <i class="fa-solid fa-user-group text-lg"></i>
+                <span class="text-xs">Trip Log</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Game Engine JS Logic -->
+    <script>
+        const REGIONS = [
+            { id: "AL", name: "Alabama", rarity: "common" }, { id: "AK", name: "Alaska", rarity: "legendary" },
+            { id: "AZ", name: "Arizona", rarity: "common" }, { id: "AR", name: "Arkansas", rarity: "common" },
+            { id: "CA", name: "California", rarity: "common" }, { id: "CO", name: "Colorado", rarity: "common" },
+            { id: "CT", name: "Connecticut", rarity: "common" }, { id: "DE", name: "Delaware", rarity: "rare" },
+            { id: "FL", name: "Florida", rarity: "common" }, { id: "GA", name: "Georgia", rarity: "common" },
+            { id: "HI", name: "Hawaii", rarity: "legendary" }, { id: "ID", name: "Idaho", rarity: "rare" },
+            { id: "IL", name: "Illinois", rarity: "common" }, { id: "IN", name: "Indiana", rarity: "common" },
+            { id: "IA", name: "Iowa", rarity: "common" }, { id: "KS", name: "Kansas", rarity: "common" },
+            { id: "KY", name: "Kentucky", rarity: "common" }, { id: "LA", name: "Louisiana", rarity: "common" },
+            { id: "ME", name: "Maine", rarity: "rare" }, { id: "MD", name: "Maryland", rarity: "common" },
+            { id: "MA", name: "Massachusetts", rarity: "common" }, { id: "MI", name: "Michigan", rarity: "common" },
+            { id: "MN", name: "Minnesota", rarity: "common" }, { id: "MS", name: "Mississippi", rarity: "common" },
+            { id: "MO", name: "Missouri", rarity: "common" }, { id: "MT", name: "Montana", rarity: "rare" },
+            { id: "NE", name: "Nebraska", rarity: "rare" }, { id: "NV", name: "Nevada", rarity: "rare" },
+            { id: "NH", name: "New Hampshire", rarity: "rare" }, { id: "NJ", name: "New Jersey", rarity: "common" },
+            { id: "NM", name: "New Mexico", rarity: "rare" }, { id: "NY", name: "New York", rarity: "common" },
+            { id: "NC", name: "North Carolina", rarity: "common" }, { id: "ND", name: "North Dakota", rarity: "legendary" },
+            { id: "OH", name: "Ohio", rarity: "common" }, { id: "OK", name: "Oklahoma", rarity: "common" },
+            { id: "OR", name: "Oregon", rarity: "common" }, { id: "PA", name: "Pennsylvania", rarity: "common" },
+            { id: "RI", name: "Rhode Island", rarity: "rare" }, { id: "SC", name: "South Carolina", rarity: "common" },
+            { id: "SD", name: "South Dakota", rarity: "rare" }, { id: "TN", name: "Tennessee", rarity: "common" },
+            { id: "TX", name: "Texas", rarity: "common" }, { id: "UT", name: "Utah", rarity: "rare" },
+            { id: "VT", name: "Vermont", rarity: "rare" }, { id: "VA", name: "Virginia", rarity: "common" },
+            { id: "WA", name: "Washington", rarity: "common" }, { id: "WV", name: "West Virginia", rarity: "rare" },
+            { id: "WI", name: "Wisconsin", rarity: "common" }, { id: "WY", name: "Wyoming", rarity: "legendary" },
+            { id: "DC", name: "Washington D.C.", rarity: "rare" }, { id: "PR", name: "Puerto Rico", rarity: "legendary" }
+        ];
+
+        const CHALLENGES = [
+            { id: "ne", name: "Complete New England", states: ["ME", "NH", "VT", "MA", "RI", "CT"], points: 1500 },
+            { id: "west", name: "West Coast Wanderer", states: ["CA", "OR", "WA"], points: 800 },
+            { id: "island", name: "Extreme Exotics", states: ["AK", "HI"], points: 2500 },
+            { id: "mid", name: "Rust Belt Assembly", states: ["MI", "OH", "PA", "IN"], points: 1000 }
+        ];
+
+        let gameState = JSON.parse(localStorage.getItem('plates_game_state')) || {
+            spotted: {},
+            score: 0,
+            streak: 0,
+            log: []
+        };
+
+        function saveState() {
+            localStorage.setItem('plates_game_state', JSON.stringify(gameState));
+            updateUI();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            
+            document.querySelectorAll('nav button').forEach(el => {
+                el.classList.remove('text-amber-400', 'font-semibold');
+                el.classList.add('text-slate-400');
+            });
+            document.getElementById(`btn-${tabId}`).classList.add('text-amber-400', 'font-semibold');
+        }
+
+        function getRarityValue(rarity) {
+            if (rarity === 'legendary') return { score: 500, color: 'border-purple-500 text-purple-400 bg-purple-500/10' };
+            if (rarity === 'rare') return { score: 200, color: 'border-amber-500 text-amber-400 bg-amber-500/10' };
+            return { score: 50, color: 'border-slate-700 text-slate-300 bg-slate-800' };
+        }
+
+        function spotPlate(id) {
+            const stateInfo = REGIONS.find(r => r.id === id);
+            const rData = getRarityValue(stateInfo.rarity);
+            
+            const isFirstTime = !gameState.spotted[id];
+            const addedScore = isFirstTime ? rData.score : 10; 
+
+            gameState.spotted[id] = (gameState.spotted[id] || 0) + 1;
+            gameState.score += addedScore;
+            gameState.streak += 1;
+            
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            gameState.log.unshift({
+                text: `${isFirstTime ? '🌟 NEW!' : '🔄 Spotted'} ${stateInfo.name} (+${addedScore} pts)`,
+                time: timestamp
+            });
+
+            saveState();
+        }
+
+        function resetTrip() {
+            if(confirm("End this leg of the road trip? This will reset your active drive streak, but save your master collection!")) {
+                gameState.streak = 0;
+                gameState.log.unshift({ text: "🚧 Started a brand new leg of the road trip.", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+                saveState();
+            }
+        }
+
+        function initUI() {
+            const panel = document.getElementById('spotting-panel');
+            const grid = document.getElementById('collection-grid');
+            panel.innerHTML = '';
+            grid.innerHTML = '';
+
+            REGIONS.sort((a,b) => a.id.localeCompare(b.id)).forEach(state => {
+                const rData = getRarityValue(state.rarity);
+                
+                // Spotter Panel Buttons
+                const spotBtn = document.createElement('button');
+                spotBtn.className = `p-3 rounded-xl border text-center font-bold text-sm active:scale-95 transition ${rData.color}`;
+                spotBtn.innerHTML = `<div>${state.id}</div><div class="text-[9px] font-normal tracking-tight opacity-60">${state.rarity}</div>`;
+                spotBtn.onclick = () => spotPlate(state.id);
+                panel.appendChild(spotBtn);
+
+                // Collection Display Badges
+                const badge = document.createElement('div');
+                badge.id = `coll-${state.id}`;
+                badge.className = `p-3 rounded-xl border text-center font-bold text-sm transition transition-all duration-300`;
+                grid.appendChild(badge);
+            });
+
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('total-score').innerText = `${gameState.score.toLocaleString()} pts`;
+            document.getElementById('leaderboard-user-score').innerText = `${gameState.score.toLocaleString()} pts`;
+            document.getElementById('drive-streak').innerText = `${gameState.streak} Plates 🔥`;
+
+            let uniqueCount = 0;
+            let commonCount = 0, rareCount = 0, legCount = 0;
+
+            REGIONS.forEach(state => {
+                const count = gameState.spotted[state.id] || 0;
+                const badge = document.getElementById(`coll-${state.id}`);
+                const rData = getRarityValue(state.rarity);
+
+                if (count > 0) {
+                    uniqueCount++;
+                    if(state.rarity === 'common') commonCount++;
+                    if(state.rarity === 'rare') rareCount++;
+                    if(state.rarity === 'legendary') legCount++;
+
+                    badge.className = `p-3 rounded-xl text-center font-bold text-sm border-2 bg-slate-800 text-white border-emerald-500 shadow-md shadow-emerald-900/20`;
+                    badge.innerHTML = `<div>${state.id}</div><div class="text-[10px] text-emerald-400 font-extrabold">×${count}</div>`;
+                } else {
+                    badge.className = `p-3 rounded-xl text-center font-bold text-sm border bg-slate-900/50 border-slate-800 text-slate-600 select-none`;
+                    badge.innerHTML = `<div>${state.id}</div><div class="text-[9px] font-normal tracking-tight opacity-40">${state.rarity[0].toUpperCase()}</div>`;
+                }
+            });
+
+            document.getElementById('unique-count').innerText = uniqueCount;
+            document.getElementById('completion-percentage').innerText = `${Math.round((uniqueCount / REGIONS.length) * 100)}% Done`;
+            
+            document.getElementById('stats-common').innerText = commonCount;
+            document.getElementById('stats-rare').innerText = rareCount;
+            document.getElementById('stats-legendary').innerText = legCount;
+
+            // Challenges Rendering
+            const chList = document.getElementById('challenges-list');
+            chList.innerHTML = '';
+            CHALLENGES.forEach(ch => {
+                const completedStates = ch.states.filter(sid => gameState.spotted[sid] > 0);
+                const isDone = completedStates.length === ch.states.length;
+                
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl border transition ${isDone ? 'bg-emerald-950/30 border-emerald-500/50' : 'bg-slate-800 border-slate-700'}`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="font-bold text-sm ${isDone ? 'text-emerald-400 line-through' : 'text-slate-200'}">${ch.name}</h4>
+                            <p class="text-[11px] text-slate-400 font-mono tracking-wider mt-0.5">${ch.states.join(', ')}</p>
+                        </div>
+                        <span class="text-xs font-bold ${isDone ? 'text-emerald-400' : 'text-amber-400'}">+${ch.points}p</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div class="h-full ${isDone ? 'bg-emerald-500' : 'bg-indigo-500'}" style="width: ${(completedStates.length / ch.states.length) * 100}%"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-2 text-[10px] text-slate-400">
+                        <span>Progress: ${completedStates.length}/${ch.states.length}</span>
+                        <span>${isDone ? '🏆 CLAIMED' : '🎯 ACTIVE'}</span>
+                    </div>
+                `;
+                chList.appendChild(card);
+            });
+
+            // Trip Log Rendering
+            const logBox = document.getElementById('trip-log');
+            if (gameState.log.length > 0) {
+                logBox.innerHTML = gameState.log.map(item => `
+                    <div class="flex justify-between items-center bg-slate-900/40 p-2 rounded border border-slate-800">
+                        <span>${item.text}</span>
+                        <span class="text-[10px] text-slate-500 font-mono">${item.time}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Boot Up Game
+        initUI();
+    </script>
+</body>
+</html>
